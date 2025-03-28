@@ -6,6 +6,7 @@ import {
   Minus,
   Plus,
 } from 'lucide-react';
+import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 
@@ -44,7 +45,7 @@ const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [pageLoading, setPageLoading] = useState<boolean>(false);
   const { getClient } = useUserContext();
-  const pdfDocumentRef = useRef<pdfjs.PDFDocumentProxy | null>(null);
+  const pdfDocumentRef = useRef<PDFDocumentProxy | null>(null);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>(MAX_PDF_WIDTH);
@@ -53,7 +54,10 @@ const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
   const [pdfDimensions, setPdfDimensions] = useState<{
     width: number;
     height: number;
-  }>({ width: 0, height: 0 });
+  }>({
+    width: 0,
+    height: 0,
+  });
   const [rotation, setRotation] = useState<number>(0);
 
   // Zoom State
@@ -69,7 +73,10 @@ const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
     y: 0,
   });
   const [scrollStart, setScrollStart] = useState<{ left: number; top: number }>(
-    { left: 0, top: 0 }
+    {
+      left: 0,
+      top: 0,
+    }
   );
 
   const zoomIn = () => {
@@ -85,7 +92,10 @@ const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
   };
 
   useEffect(() => {
-    pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+      'pdfjs-dist/build/pdf.worker.min.js',
+      import.meta.url
+    ).toString();
   }, []);
 
   useEffect(() => {
@@ -123,7 +133,7 @@ const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
     };
   }, [open, id, getClient, initialPage]);
 
-  const onDocumentLoadSuccess = (pdf: pdfjs.PDFDocumentProxy) => {
+  const onDocumentLoadSuccess = (pdf: PDFDocumentProxy) => {
     setNumPages(pdf.numPages);
     pdfDocumentRef.current = pdf;
     if (currentPage > pdf.numPages) {
@@ -141,7 +151,7 @@ const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
     setPageLoading(true);
   };
 
-  const onPageLoadSuccess = (page: pdfjs.PDFPageProxy) => {
+  const onPageLoadSuccess = (page: PDFPageProxy) => {
     const viewport = page.getViewport({ scale: 1 });
     setPdfDimensions({ width: viewport.width, height: viewport.height });
     setPageLoading(false);
